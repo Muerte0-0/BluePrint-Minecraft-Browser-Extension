@@ -1,10 +1,10 @@
 info:
-  name: "Modrinth Browser"
+  name: "Minecraft Browser"
   identifier: "modrinthbrowser"
-  description: "Browse and download Modrinth plugins directly from the server panel."
-  version: "1.2.2"
+  description: "Browse and download Modrinth plugins AND mods (Fabric/Forge/Quilt/NeoForge), plus SpigotMC plugins, directly from the server panel."
+  version: "1.3.0"
   target: "beta-2026-01"
-  author: "fernsehheft"
+  author: "fernsehheft (original), Muerte0-0 (mod support fork)"
   icon: 'resources/icon.png'
   website: ''
 

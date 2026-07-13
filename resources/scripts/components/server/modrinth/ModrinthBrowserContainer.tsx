@@ -178,9 +178,17 @@ const spigotCategories = [
     { id: '24', name: 'Fun' },
 ];
 
-const loadersList = [
-    'paper', 'purpur', 'spigot', 'bukkit', 'folia', 'velocity', 'waterfall', 'bungeecord'
+type ContentType = 'plugin' | 'mod';
+
+const contentTypesList: { id: ContentType; name: string; folder: string }[] = [
+    { id: 'plugin', name: 'Plugins', folder: 'plugins' },
+    { id: 'mod', name: 'Mods', folder: 'mods' },
 ];
+
+const loadersByType: Record<ContentType, string[]> = {
+    plugin: ['paper', 'purpur', 'spigot', 'bukkit', 'folia', 'velocity', 'waterfall', 'bungeecord'],
+    mod: ['fabric', 'forge', 'neoforge', 'quilt'],
+};
 
 interface UnifiedPlugin {
     id: string;
@@ -235,6 +243,7 @@ interface UnifiedVersion {
 export default () => {
     const server = ServerContext.useStoreState(state => state.server.data);
     const [platform, setPlatform] = useState<Platform>('modrinth');
+    const [contentType, setContentType] = useState<ContentType>('plugin');
     const [query, setQuery] = useState('');
     const [filters, setFilters] = useState({ category: '', loader: '', sort: 'relevance' });
     const [plugins, setPlugins] = useState<UnifiedPlugin[]>([]);
@@ -252,7 +261,7 @@ export default () => {
     const [availableLoaders, setAvailableLoaders] = useState<string[]>([]);
 
     const searchModrinth = async (q: string, offset: number): Promise<{ plugins: UnifiedPlugin[], total: number }> => {
-        const facets = [['project_type:plugin']];
+        const facets = [[`project_type:${contentType}`]];
         if (filters.category) facets.push([`categories:${filters.category}`]);
         if (filters.loader) facets.push([`categories:${filters.loader}`]);
 
@@ -335,7 +344,7 @@ export default () => {
         } finally {
             setLoading(false);
         }
-    }, [platform, filters]);
+    }, [platform, contentType, filters]);
 
     const debouncedSearch = useCallback(debounce((q) => {
         setPage(0);
@@ -344,7 +353,7 @@ export default () => {
 
     useEffect(() => {
         debouncedSearch(query);
-    }, [query, filters, platform]);
+    }, [query, filters, platform, contentType]);
 
     useEffect(() => {
         if (page > 0) {
@@ -420,7 +429,8 @@ export default () => {
             await http.post(`/extensions/modrinthbrowser/download`, {
                 downloadUrl: file.url,
                 filename: file.filename,
-                serverUuid: server.uuid
+                serverUuid: server.uuid,
+                folder: platform === 'modrinth' ? contentTypesList.find(c => c.id === contentType)!.folder : 'plugins',
             });
 
             btn.innerHTML = `<i class="fas fa-check"></i> Success`;
@@ -470,6 +480,7 @@ export default () => {
                     </div>
 
                     {/* Platform Selector */}
+                    <div className="flex flex-col md:items-end gap-2">
                     <div className="flex gap-2">
                         <PlatformTab
                             active={platform === 'modrinth'}
@@ -494,6 +505,27 @@ export default () => {
                             </svg>
                             CurseForge
                         </PlatformTab>
+                    </div>
+
+                    {/* Content Type Selector (Modrinth only — SpigotMC is plugin-only) */}
+                    {platform === 'modrinth' && (
+                        <div className="flex gap-2">
+                            {contentTypesList.map(ct => (
+                                <PlatformTab
+                                    key={ct.id}
+                                    active={contentType === ct.id}
+                                    color="rgb(99, 102, 241)"
+                                    onClick={() => {
+                                        setContentType(ct.id);
+                                        setFilters({ category: '', loader: '', sort: 'relevance' });
+                                        setPage(0);
+                                    }}
+                                >
+                                    {ct.name}
+                                </PlatformTab>
+                            ))}
+                        </div>
+                    )}
                     </div>
                 </GlassPanel>
 
@@ -533,7 +565,7 @@ export default () => {
                                     <label className="block mb-2 text-sm font-medium text-neutral-300">Loader</label>
                                     <PremiumDropdown
                                         value={filters.loader}
-                                        options={[{ id: '', name: 'All Loaders' }, ...loadersList.map(l => ({ id: l, name: l }))]}
+                                        options={[{ id: '', name: 'All Loaders' }, ...loadersByType[contentType].map(l => ({ id: l, name: l }))]}
                                         onChange={val => setFilters({ ...filters, loader: val })}
                                     />
                                 </div>
