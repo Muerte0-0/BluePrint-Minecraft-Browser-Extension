@@ -31,6 +31,7 @@ class PluginController extends Controller
             'downloadUrl' => 'required|url',
             'filename' => 'required|string|ends_with:.jar',
             'serverUuid' => 'required|string|exists:servers,uuid',
+            'folder' => 'sometimes|string|in:plugins,mods',
         ]);
 
         $server = Server::where('uuid', $request->input('serverUuid'))->firstOrFail();
@@ -55,8 +56,10 @@ class PluginController extends Controller
             $content = $response->body();
 
             // 4. Save to Server via Wings (DaemonFileRepository)
-            // We save to /plugins/filename.jar
-            $path = '/plugins/' . $filename;
+            // Destination folder is whitelisted to 'plugins' or 'mods' above —
+            // never build this path from an unvalidated client string.
+            $folder = $request->input('folder', 'plugins');
+            $path = '/' . $folder . '/' . $filename;
 
             // Put content
             $this->fileRepository->setServer($server)->putContent($path, $content);
