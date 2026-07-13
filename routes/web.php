@@ -1,6 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Pterodactyl\BlueprintFramework\Extensions\modrinthbrowser\PluginController;
+use Pterodactyl\BlueprintFramework\Extensions\modrinthbrowser\MinecraftController;
 
-Route::post('/download', [PluginController::class, 'download'])->name('extension.modrinthbrowser.download');
+Route::post('/download', [MinecraftController::class, 'download'])->name('extension.modrinthbrowser.download');

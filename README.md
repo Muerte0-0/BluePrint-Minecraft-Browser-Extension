@@ -1,57 +1,65 @@
-# Modrinth Browser Extension for Pterodactyl
+# Minecraft Browser Extension for Pterodactyl
 
-This is an open-source **Blueprint extension** for Pterodactyl that adds a handy **Plugins** tab right inside your server panel. With it, you can browse, search, and install plugins straight from **Modrinth** — no need to leave the dashboard.
+This is an open-source **Blueprint extension** for Pterodactyl that adds a **Mods & Plugins** tab right inside your server panel. Browse, search, and install Minecraft mods and plugins from **Modrinth**, or plugins from **SpigotMC**, without leaving the dashboard.
 
-No more downloading files by hand or uploading things manually. Just pick what you need, hit install, and you’re set.
+No more downloading files by hand or uploading things manually. Pick what you need, hit install, and you're set.
+
+This is a fork of [fernsehheft/BluePrint-Free-Plugins-Extension](https://github.com/fernsehheft/BluePrint-Free-Plugins-Extension) with mod support added — see [What Changed From Upstream](#what-changed-from-upstream) below.
 
 ---
 
 ## Features
 
-* 📚 Browse Modrinth plugins directly from your Pterodactyl Panel.
-* 🔍 Search and filter by project name, Minecraft version, and loader (support for more like Bukkit, Spigot, CurseForge coming soon).
-* ⬇️ One-click download & install.
-* 🔒 Backend checks server permissions before installing.
+* 📚 Browse Modrinth **plugins and mods** directly from your Pterodactyl Panel, or SpigotMC plugins via Spiget.
+* 🔀 Toggle between **Plugins** and **Mods** — loader filters and the search itself adjust automatically (Paper/Purpur/Spigot/Bukkit/Folia/Velocity/Waterfall/BungeeCord for plugins; Fabric/Forge/NeoForge/Quilt for mods).
+* 🔍 Search and filter by project name, Minecraft version, category, and loader.
+* ⬇️ One-click download & install — mods are saved to `/mods/`, plugins to `/plugins/`, automatically.
+* 🔒 Backend checks server permissions before installing, and whitelists the destination folder server-side.
 * 🎨 Modern React-based UI for a smooth experience.
 * 🆓 100% free and open source.
+
+**Not yet implemented:** the CurseForge tab visible in the UI is a disabled placeholder — there's no CurseForge API integration behind it. Don't rely on it; SpigotMC and Modrinth (plugins + mods) are the two working sources.
 
 ---
 
 ## Folder Structure
 
-The extension uses the usual Blueprint project structure:
-
 ```
-ModrinthBrowser/
+BluePrint-Minecraft-Browser-Extension/
 ├── conf.yml
 ├── app/
-│   └── Http/
-│       └── Controllers/
-│           └── Extensions/
-│               └── ModrinthBrowser/
-│                   └── PluginController.php
+│   └── MinecraftController.php
 ├── resources/
+│   ├── icon.png
+│   ├── views/
+│   │   └── view.blade.php
 │   └── scripts/
 │       └── components/
+│           ├── Components.yml
 │           └── server/
-│               └── modrinth/
-│                   └── ModrinthBrowserContainer.tsx
+│               └── minecraft/
+│                   └── MinecraftBrowserContainer.tsx
 └── routes/
-    └── server.php
+    └── web.php
 ```
 
-### Quick Overview:
+### Quick Overview
 
-* `conf.yml`: Extension metadata & config
-* `PluginController.php`: Handles download & validation
-* `ModrinthBrowserContainer.tsx`: UI code (React)
-* `server.php`: Blueprint routes
+* `conf.yml`: Extension metadata & config (identifier, panel wiring)
+* `Components.yml`: Registers the panel navigation entry and points it at the React component
+* `MinecraftController.php`: Validates and handles mod/plugin downloads, whitelists the save folder
+* `MinecraftBrowserContainer.tsx`: UI code (React) — search, filters, Plugins/Mods toggle
+* `web.php`: Blueprint route registration
+
+---
+
+## A Note on the Extension Identifier
+
+The Blueprint `identifier` in `conf.yml` is still `modrinthbrowser`, matching the upstream project, even though the repo, files, and UI have been renamed to "Minecraft Browser." This is intentional, not an oversight: Blueprint treats the identifier as the extension's actual internal name — it drives the PHP namespace, the packaged `.blueprint` filename, and Blueprint's install/upgrade bookkeeping. Changing it would make this look like an entirely different extension to Blueprint rather than an update, and would require regenerating scaffolding via Blueprint's own CLI rather than a manual rename. If you're already running the upstream `modrinthbrowser` extension, installing this fork's package will cleanly replace it.
 
 ---
 
 ## Requirements
-
-To get this extension running, you'll need:
 
 * The Pterodactyl Panel with Blueprint support
 * Blueprint installed
@@ -59,6 +67,7 @@ To get this extension running, you'll need:
 * Outbound network access to:
   * `api.modrinth.com`
   * `cdn.modrinth.com`
+  * `api.spiget.org` (for the SpigotMC tab)
 
 ---
 
@@ -66,18 +75,14 @@ To get this extension running, you'll need:
 
 The installation works best with the Blueprint package manager.
 
----
+### 1️⃣ Download the Latest Release
 
-### 1️⃣ Download the Latest LTS Release
-
-1. Go to this repo’s GitHub Releases page.
-2. Download the most recent **LTS** release:
+1. Go to this repo's GitHub Releases page.
+2. Download the packaged extension:
     ```
     modrinthbrowser.blueprint
     ```
-    If the download has a version in the filename, you can rename it to the above if you prefer.
-
----
+    (The filename stays `modrinthbrowser.blueprint` regardless of the repo name — see [above](#a-note-on-the-extension-identifier).)
 
 ### 2️⃣ Upload to Your Pterodactyl Directory
 
@@ -93,8 +98,6 @@ Example:
 ```
 scp modrinthbrowser.blueprint user@server:/var/www/pterodactyl/
 ```
-
----
 
 ### 3️⃣ Install the Extension
 
@@ -115,14 +118,9 @@ scp modrinthbrowser.blueprint user@server:/var/www/pterodactyl/
 
 ## Uninstalling
 
-To remove the extension, run:
 ```
 cd /var/www/pterodactyl
 blueprint -remove modrinthbrowser.blueprint
-```
-
-Don't forget to clear the cache afterwards:
-```
 php artisan optimize:clear
 ```
 
@@ -130,15 +128,11 @@ php artisan optimize:clear
 
 ## Updating
 
-Just uninstall the old version and install the new one. Here’s a quick process:
-
-### Recommended Update Process
-
 1. Remove the old version:
     ```
     blueprint -remove modrinthbrowser.blueprint
     ```
-2. Download the latest LTS release from GitHub.
+2. Download the latest release from GitHub.
 3. Upload the new file to `/var/www/pterodactyl`.
 4. Install again:
     ```
@@ -156,36 +150,43 @@ Just uninstall the old version and install the new one. Here’s a quick process
 
 ### Frontend
 
-The panel interface lives here:
 ```
-resources/scripts/components/server/modrinth/ModrinthBrowserContainer.tsx
+resources/scripts/components/server/minecraft/MinecraftBrowserContainer.tsx
 ```
-It’s all React + Tailwind, talking to the backend and Modrinth’s API.
+React + Tailwind. Handles the Plugins/Mods toggle, search, filters, and talks to Modrinth's API directly plus this extension's own backend route for downloads.
 
 ### Backend
 
-This is the controller doing the heavy lifting:
 ```
-app/Http/Controllers/Extensions/ModrinthBrowser/PluginController.php
+app/MinecraftController.php
 ```
 It:
-* Checks and validates requests
-* Verifies your user/server has the right permissions
-* Streams plugin files securely
-* Drops them in the correct server folder
+* Validates the request, including a whitelisted `folder` value (`plugins` or `mods` only — never built from a raw client string)
+* Verifies your user/server has `file.create` permission
+* Streams the file securely via Wings' `DaemonFileRepository`
+* Drops it in `/plugins/` or `/mods/` depending on content type
 
 ### Security
 
 * Enforces `file.create` permission checks.
 * Validates all project/version IDs.
-* Prevents directory traversal attacks.
-* Uses Pterodactyl’s built-in storage APIs.
+* Whitelists the destination folder server-side (`plugins`|`mods`) — prevents path/directory traversal via a crafted folder value.
+* Uses Pterodactyl's built-in storage APIs.
+
+---
+
+## What Changed From Upstream
+
+This fork fixes two bugs in the original that together made mod installation silently impossible:
+
+1. **Search was hardcoded to `project_type:plugin`.** Forge/Fabric/Quilt/NeoForge mods never appeared in results, and the loader filter only ever listed plugin loaders (Paper, Spigot, etc.). Fixed with a Plugins/Mods toggle that adjusts the Modrinth search facets and loader list accordingly.
+2. **Downloads always saved to `/plugins/`,** even if bug #1 had been worked around. Mod loaders read from `/mods/`, not `/plugins/`, so a "successfully downloaded" mod would never actually load. Fixed by having the backend accept a whitelisted `folder` parameter tied to the selected content type.
 
 ---
 
 ## 🛠️ Developing & Local Testing
 
-To run locally, you can place the extension here:
+To run locally, place the extension here:
 
 ```
 .blueprint/extensions/ModrinthBrowser
@@ -197,7 +198,7 @@ Then use:
 blueprint -i modrinthbrowser
 ```
 
-You’ll get hot reloads for most changes.
+You'll get hot reloads for most changes.
 
 ---
 
@@ -211,8 +212,6 @@ Typical ways to help:
 * Submitting pull requests
 * Suggesting new features
 
-Please follow the usual GitHub process and check for open issues first.
-
 ---
 
 ## License
@@ -223,7 +222,7 @@ Open source, of course! See the `LICENSE` file for specifics.
 
 ## Acknowledgements
 
+* [fernsehheft](https://github.com/fernsehheft) for the original Modrinth Browser extension this is forked from
 * Modrinth API & team
 * The Pterodactyl contributors
 * Blueprint Framework maintainers
-* Everyone else who’s pitched in along the way!

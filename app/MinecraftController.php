@@ -9,7 +9,7 @@ use Pterodactyl\Http\Controllers\Controller;
 use Pterodactyl\Repositories\Wings\DaemonFileRepository;
 use Pterodactyl\Exceptions\Http\Connection\DaemonConnectionException;
 
-class PluginController extends Controller
+class MinecraftController extends Controller
 {
     private DaemonFileRepository $fileRepository;
 
