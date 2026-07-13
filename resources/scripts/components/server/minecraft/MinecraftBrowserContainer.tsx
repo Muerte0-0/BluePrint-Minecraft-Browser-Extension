@@ -472,7 +472,7 @@ export default () => {
                             <FontAwesomeIcon icon={faCube} className="text-2xl" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">Mods & Plugins</h1>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Browser</h1>
                             <p className="text-neutral-400 text-sm">
                                 {platform === 'modrinth' ? 'Powered by Modrinth API' : 'Powered by Spiget API (SpigotMC)'}
                             </p>
